@@ -1,0 +1,7 @@
+{
+  "name": "Smart-HIS Pro",
+  "description": "A comprehensive Hospital Information System (HIS) featuring a Doctor Workstation with AI diagnostics, Pharmacy dispensing, Medical Store inventory, and Registration/Billing modules. Built with high-performance React and integrated with Gemini 3 for intelligent medical assistance.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
