@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Patient, Prescription } from '../types';
+import { Patient, Prescription, Medication } from '../types';
 import { getMedicalAdvice } from '../services/geminiService';
 import { useAppContext } from '../context/AppContext';
 
@@ -16,6 +16,14 @@ const DoctorWorkstation: React.FC = () => {
   // Mobile View Tabs: 'patients' | 'record' | 'prescription'
   const [activeTab, setActiveTab] = useState<'patients' | 'record' | 'prescription'>('record');
 
+  // 辅助函数：在当前库存中查找匹配的药品
+  const findInInventory = (medName: string): Medication | undefined => {
+    if (!medName) return undefined;
+    // 优先精确匹配，其次是包含匹配
+    return medications.find(m => m.name === medName) || 
+           medications.find(m => m.name.includes(medName) || medName.includes(m.name));
+  };
+
   const handleAiAssist = async () => {
     if (!symptoms) return;
     setAiLoading(true);
@@ -28,8 +36,15 @@ const DoctorWorkstation: React.FC = () => {
   };
 
   const addToPrescription = (medName: string) => {
-    const med = medications.find(m => m.name === medName);
-    if (!med) return;
+    const med = findInInventory(medName);
+    if (!med) {
+      alert(`药品 "${medName}" 不在药库清单中，请手动录入或联系药库。`);
+      return;
+    }
+    
+    // 检查是否已添加
+    if (prescriptions.find(p => p.medicationId === med.id)) return;
+
     setPrescriptions([...prescriptions, { 
       medicationId: med.id,
       name: med.name, 
@@ -37,7 +52,6 @@ const DoctorWorkstation: React.FC = () => {
       quantity: 1,
       freq: '3次/日' 
     }]);
-    // 在移动端点击添加药品后，如果当前不在处方页，可以给个提示
   };
 
   const handleCommit = () => {
@@ -172,15 +186,22 @@ const DoctorWorkstation: React.FC = () => {
                    </div>
                    <p className="text-xs text-indigo-700 leading-relaxed mb-3">{aiAdvice.analysis}</p>
                    <div className="flex flex-wrap gap-2">
-                     {aiAdvice.medications.map((m: string, i: number) => (
-                       <button 
-                         key={i} 
-                         onClick={() => addToPrescription(m)}
-                         className="text-[10px] bg-white border border-indigo-200 px-2 py-1 rounded text-indigo-600 hover:bg-indigo-600 hover:text-white"
-                       >
-                         + {m}
-                       </button>
-                     ))}
+                     {aiAdvice.medications.map((m: string, i: number) => {
+                       const matched = findInInventory(m);
+                       return (
+                         <button 
+                           key={i} 
+                           onClick={() => addToPrescription(matched ? matched.name : m)}
+                           className={`text-[10px] px-2 py-1 rounded transition-all border ${
+                             matched 
+                             ? 'bg-white border-indigo-300 text-indigo-600 hover:bg-indigo-600 hover:text-white' 
+                             : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
+                           }`}
+                         >
+                           + {matched ? `${matched.name} (${matched.spec})` : m}
+                         </button>
+                       );
+                     })}
                    </div>
                 </div>
               )}
