@@ -10,7 +10,7 @@ import datetime
 
 # --- 数据库配置 ---
 # 请修改为您的 MySQL 配置: mysql+pymysql://user:password@host:port/dbname
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:password@localhost:3306/his_db"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/his_db"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
