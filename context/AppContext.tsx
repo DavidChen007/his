@@ -1,17 +1,18 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Patient, Medication, Prescription } from '../types';
-import { storage } from '../services/storageService';
+import { api } from '../services/apiService';
 
 interface AppContextType {
   patients: Patient[];
   medications: Medication[];
   prescriptions: Prescription[];
-  addPatient: (p: Patient) => void;
-  updatePatient: (id: string, updates: Partial<Patient>) => void;
-  addPrescription: (prescription: Prescription) => void;
-  dispenseMedication: (prescriptionId: string) => void;
-  updateInventory: (medId: string, change: number) => void;
+  refreshData: () => Promise<void>;
+  addPatient: (p: Patient) => Promise<void>;
+  updatePatient: (id: string, updates: Partial<Patient>) => Promise<void>;
+  addPrescription: (prescription: Prescription) => Promise<void>;
+  dispenseMedication: (prescriptionId: string) => Promise<void>;
+  updateInventory: (medId: string, change: number) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -21,55 +22,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [medications, setMedications] = useState<Medication[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
 
-  // Initialize data
+  const refreshData = async () => {
+    try {
+      const [p, m, rx] = await Promise.all([
+        api.getPatients(),
+        api.getMedications(),
+        api.getPrescriptions()
+      ]);
+      setPatients(p);
+      setMedications(m);
+      setPrescriptions(rx);
+    } catch (e) {
+      console.error("Failed to fetch data from Python backend:", e);
+    }
+  };
+
   useEffect(() => {
-    setPatients(storage.getPatients());
-    setMedications(storage.getMedications());
-    setPrescriptions(storage.getPrescriptions());
+    refreshData();
   }, []);
 
-  // Persist data on change
-  useEffect(() => { storage.setPatients(patients); }, [patients]);
-  useEffect(() => { storage.setMedications(medications); }, [medications]);
-  useEffect(() => { storage.setPrescriptions(prescriptions); }, [prescriptions]);
-
-  const addPatient = (p: Patient) => setPatients([p, ...patients]);
-
-  const updatePatient = (id: string, updates: Partial<Patient>) => {
-    setPatients(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  const addPatient = async (p: Patient) => {
+    await api.addPatient(p);
+    await refreshData();
   };
 
-  const addPrescription = (pres: Prescription) => {
-    setPrescriptions([pres, ...prescriptions]);
-    // 同时更新患者状态
-    updatePatient(pres.patientId, { status: '已完成' });
+  const updatePatient = async (id: string, updates: Partial<Patient>) => {
+    await api.updatePatient(id, updates);
+    await refreshData();
   };
 
-  const updateInventory = (medId: string, change: number) => {
-    setMedications(prev => prev.map(m => 
-      m.id === medId ? { ...m, stock: Math.max(0, m.stock + change) } : m
-    ));
+  const addPrescription = async (pres: Prescription) => {
+    await api.addPrescription(pres);
+    await refreshData();
   };
 
-  const dispenseMedication = (prescriptionId: string) => {
-    const pres = prescriptions.find(p => p.id === prescriptionId);
-    if (!pres) return;
+  const updateInventory = async (medId: string, change: number) => {
+    await api.updateInventory(medId, change);
+    await refreshData();
+  };
 
-    // 更新处方状态
-    setPrescriptions(prev => prev.map(p => 
-      p.id === prescriptionId ? { ...p, status: '已发药' } : p
-    ));
-
-    // 扣减库存
-    pres.medications.forEach(m => {
-      updateInventory(m.medicationId, -m.quantity);
-    });
+  const dispenseMedication = async (prescriptionId: string) => {
+    await api.dispenseMedication(prescriptionId);
+    await refreshData();
   };
 
   return (
     <AppContext.Provider value={{
       patients, medications, prescriptions,
-      addPatient, updatePatient, addPrescription,
+      refreshData, addPatient, updatePatient, addPrescription,
       dispenseMedication, updateInventory
     }}>
       {children}

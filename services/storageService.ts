@@ -1,6 +1,6 @@
 
 import { Patient, Medication, Prescription } from '../types';
-import { MOCK_PATIENTS, MOCK_MEDICATIONS } from '../constants';
+import { MOCK_PATIENTS, MOCK_MEDICATIONS, MOCK_PRESCRIPTIONS } from '../constants';
 
 const KEYS = {
   PATIENTS: 'his_patients',
@@ -27,7 +27,7 @@ export const storage = {
 
   getPrescriptions: (): Prescription[] => {
     const data = localStorage.getItem(KEYS.PRESCRIPTIONS);
-    return data ? JSON.parse(data) : [];
+    return data ? JSON.parse(data) : MOCK_PRESCRIPTIONS;
   },
   setPrescriptions: (data: Prescription[]) => {
     localStorage.setItem(KEYS.PRESCRIPTIONS, JSON.stringify(data));
