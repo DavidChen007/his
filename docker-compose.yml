@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # 数据库服务
+  db:
+    image: mysql:8.0
+    container_name: his_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: his_db
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # 后端 API 服务
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: his_backend
+    restart: always
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=his_db
+      - DEBUG_MODE=False
+      - API_KEY=${API_KEY}
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  # 前端 Web 服务
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: his_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
