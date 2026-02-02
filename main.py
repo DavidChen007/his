@@ -1,4 +1,5 @@
 
+<<<<<<< HEAD
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -251,7 +252,15 @@ def init_data():
         db.add_all(mocks)
     db.commit()
     db.close()
+=======
+# 此文件已弃用，请使用 `python -m backend.main` 启动后端
+# 数据库初始化请使用 `python -m backend.init_db`
+import sys
+>>>>>>> 76c7cb99990690c84f57670d110bbd4f25f9bcac
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print("错误: 核心逻辑已迁移至 backend 目录。")
+    print("请使用以下命令启动项目：")
+    print("1. 初始化数据库: python -m backend.init_db")
+    print("2. 启动后端服务: python -m backend.main")
+    sys.exit(1)
