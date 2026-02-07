@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      // 从环境变量读取 base path，默认为 '/'
+      base: env.BASE_PATH || '/',
       server: {
         port: 3000,
         host: '0.0.0.0',
