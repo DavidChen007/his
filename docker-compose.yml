@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # MySQL 数据库服务
   db:
     image: mysql:8.0
     container_name: his_mysql
@@ -18,7 +17,6 @@ services:
       timeout: 20s
       retries: 10
 
-  # 后端 API 服务
   backend:
     build:
       context: .
@@ -30,7 +28,6 @@ services:
       - DB_USER=root
       - DB_PASSWORD=dify123456
       - DB_NAME=his_db
-      - DEBUG_MODE=False
       - API_KEY=${API_KEY}
     ports:
       - "8000:8000"
@@ -38,7 +35,6 @@ services:
       db:
         condition: service_healthy
 
-  # 前端 Web 服务
   frontend:
     build:
       context: .
